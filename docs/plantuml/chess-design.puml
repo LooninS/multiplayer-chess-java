@@ -1,0 +1,37 @@
+@startuml
+title Multiplayer Chess - OOP and SOLID Design
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+interface GameState
+interface MoveValidator
+interface MessageSender
+interface MoveParser
+interface PromotionPolicy
+
+class ChessGame
+class Move
+class Player
+class GameSession
+class ChessServer
+class ChessClient
+class ChessException <<exception>>
+class InvalidMoveException <<exception>>
+
+ChessGame ..|> GameState : abstraction
+ChessGame ..|> MoveValidator : abstraction
+ChessGame o-- MoveParser : injected
+ChessGame o-- PromotionPolicy : injected
+Player ..|> MessageSender : polymorphism
+ChessGame ..> Move : validates
+GameSession o-- MessageSender : aggregation
+GameSession *-- ChessGame : composition
+ChessServer o-- Player : aggregation
+ChessClient --> GameSession : association
+InvalidMoveException --|> ChessException : inheritance
+
+note bottom of GameSession
+  SRP: coordinates one match
+  DIP: depends on interfaces
+end note
+@enduml

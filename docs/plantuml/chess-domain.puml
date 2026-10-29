@@ -1,0 +1,61 @@
+@startuml
+title Multiplayer Chess - Domain Model
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+enum Piece {
+  EMPTY
+  WHITE_PAWN
+  WHITE_KNIGHT
+  WHITE_BISHOP
+  WHITE_ROOK
+  WHITE_QUEEN
+  WHITE_KING
+  BLACK_PAWN
+  BLACK_KNIGHT
+  BLACK_BISHOP
+  BLACK_ROOK
+  BLACK_QUEEN
+  BLACK_KING
+  --
+  +symbol : char
+  +white : boolean
+  +belongsTo(side : boolean) : boolean
+  +promoted(side : boolean) : Piece
+}
+
+class Move <<value object>> {
+  +fromRow : int
+  +fromCol : int
+  +toRow : int
+  +toCol : int
+  --
+  +parse(value : String) : Move
+  +notation() : String
+}
+
+class ChessGame <<aggregate root>> {
+  -board : Piece[8][8]
+  -whiteToMove : boolean
+  -status : String
+  -enPassantRow : int
+  -enPassantCol : int
+  --
+  +snapshot() : String
+  +move(notation : String) : String
+  --
+  -isLegal(move : Move, side : boolean) : boolean
+  -isInCheck(side : boolean) : boolean
+  -hasLegalMove(side : boolean) : boolean
+}
+
+ChessGame *-- "64 squares" Piece
+ChessGame ..> Move : validates
+Move ..> ChessGame : command
+
+note right of ChessGame
+  Encapsulates all mutable board state
+  and chess rules. Clients cannot
+  mutate the board directly.
+end note
+@enduml

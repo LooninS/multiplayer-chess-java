@@ -1,0 +1,90 @@
+@startuml
+title Multiplayer Chess - Network Object Model
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class ChessServer {
+  -pool : ExecutorService
+  -waiting : BlockingQueue<Player>
+  --
+  +main(args : String[])
+  -start(port : int)
+  -addPlayer(socket : Socket)
+}
+
+class GameSession {
+  -white : Player
+  -black : Player
+  -game : ChessGame
+  --
+  +start()
+  -readMoves(player : Player, whiteSide : boolean)
+  -broadcast(message : String)
+}
+
+class Player {
+  -socket : Socket
+  -in : BufferedReader
+  -out : PrintWriter
+  --
+  +send(message : String)
+}
+
+class ChessGame {
+  +snapshot() : String
+  +move(notation : String) : String
+}
+
+interface GameState {
+  +snapshot() : String
+  +move(notation : String) : String
+}
+
+interface MoveValidator {
+  +isLegal(move : Move, whiteSide : boolean) : boolean
+}
+
+interface MessageSender {
+  +send(message : String)
+}
+
+interface MoveParser {
+  +parse(notation : String) : Move
+}
+
+interface PromotionPolicy {
+  +promote(pawn : Piece, row : int) : Piece
+}
+
+class ChessException <<exception>>
+class InvalidMoveException <<exception>>
+
+class ChessClient {
+  -squares : JButton[8][8]
+  -socket : Socket
+  -out : PrintWriter
+  --
+  +main(args : String[])
+  -connect(host : String, port : int)
+  -listen(in : BufferedReader)
+  -clickSquare(row : int, col : int)
+  -updateBoard(message : String)
+}
+
+ChessServer *-- "0..*" GameSession : creates
+ChessServer o-- "0..*" Player : waiting queue
+GameSession *-- ChessGame : owns
+GameSession o-- "2" Player : coordinates
+GameSession o-- "2" MessageSender : broadcasts
+ChessGame ..|> GameState
+ChessGame ..|> MoveValidator
+ChessGame o-- MoveParser
+ChessGame o-- PromotionPolicy
+Player ..|> MessageSender
+InvalidMoveException --|> ChessException
+ChessClient ..> GameSession : TCP protocol
+GameSession ..> ChessClient : state broadcasts
+
+note "The server is authoritative.\nAll move validation occurs inside ChessGame." as N1
+N1 .. GameSession
+@enduml

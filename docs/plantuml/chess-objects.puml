@@ -1,0 +1,55 @@
+@startuml
+title Multiplayer Chess - Runtime Object Diagram
+skinparam shadowing false
+
+object "server : ChessServer" as server {
+  port = 8080
+}
+
+object "session : GameSession" as session {
+  match = active
+}
+
+object "white : Player" as white {
+  color = WHITE
+}
+
+object "black : Player" as black {
+  color = BLACK
+}
+
+object "game : ChessGame" as game {
+  turn = WHITE
+  status = "White to move"
+}
+
+object "move : Move" as move {
+  notation = "e2e4"
+}
+
+object "whiteClient : ChessClient" as whiteClient {
+  connected = true
+}
+
+object "blackClient : ChessClient" as blackClient {
+  connected = true
+}
+
+server *-- session : owns
+session *-- game : current game
+session o-- white : player
+session o-- black : player
+whiteClient ..> white : socket
+blackClient ..> black : socket
+whiteClient ..> move : sends
+session ..> move : delegates
+game ..> move : validates and applies
+session ..> whiteClient : broadcasts state
+session ..> blackClient : broadcasts state
+
+note right of game
+  Example state after
+  the initial position,
+  before e2e4 is applied.
+end note
+@enduml
