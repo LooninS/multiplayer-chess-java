@@ -29,6 +29,7 @@ class Move <<value object>> {
   +fromCol : int
   +toRow : int
   +toCol : int
+  +promotion : char
   --
   +parse(value : String) : Move
   +notation() : String

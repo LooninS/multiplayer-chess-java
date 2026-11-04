@@ -35,6 +35,10 @@ object "blackClient : ChessClient" as blackClient {
   connected = true
 }
 
+object "promotion : ChoicePromotionPolicy" as promotion {
+  choices = Q, R, B, N
+}
+
 server *-- session : owns
 session *-- game : current game
 session o-- white : player
@@ -44,12 +48,13 @@ blackClient ..> black : socket
 whiteClient ..> move : sends
 session ..> move : delegates
 game ..> move : validates and applies
+game ..> promotion : chooses promoted piece
 session ..> whiteClient : broadcasts state
 session ..> blackClient : broadcasts state
 
 note right of game
-  Example state after
-  the initial position,
-  before e2e4 is applied.
+  Example initial state.
+  Clients display colour and
+  whose turn it is.
 end note
 @enduml

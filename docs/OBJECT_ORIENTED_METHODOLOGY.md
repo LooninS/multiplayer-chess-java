@@ -41,7 +41,7 @@ and apply a move.
 |---|---|---|
 | `ChessGame` | Owns board state, turn state, special-move state, and rule validation | `Piece`, `Move` |
 | `Piece` | Represents a chess piece type, color, and symbol | `ChessGame` |
-| `Move` | Immutable value object for source and destination squares | `ChessGame` |
+| `Move` | Immutable value object for source, destination, and optional promotion choice | `ChessGame` |
 | `ChessServer` | Accepts TCP connections and pairs waiting players | `Player`, `GameSession` |
 | `GameSession` | Coordinates one match and serializes move requests | `ChessGame`, `Player` |
 | `Player` | Encapsulates a client's socket and streams | `GameSession` |
@@ -59,7 +59,8 @@ and apply a move.
 
 #### Make a move
 
-1. `ChessClient` converts two selected squares into a `MOVE|e2e4` command.
+1. `ChessClient` converts two selected squares into a `MOVE|e2e4` command, or
+   prompts for a promotion piece and sends a suffix such as `MOVE|e7e8q`.
 2. `GameSession` identifies the sending player's color.
 3. `ChessGame.move()` parses and validates the move.
 4. `ChessGame` applies the move and updates the game status.
@@ -88,7 +89,7 @@ The project uses interfaces to expose stable contracts while hiding implementati
 - `MessageSender` abstracts delivery of protocol messages.
 - `MoveParser` abstracts input syntax.
 - `PromotionPolicy` abstracts the promotion rule; the default
-  `QueenPromotionPolicy` can be replaced without editing `ChessGame`.
+  `ChoicePromotionPolicy` can be replaced without editing `ChessGame`.
 
 `GameSession` works with `GameState` and broadcasts through `MessageSender`, so
 the networking and rules implementation can be replaced without changing the
@@ -103,7 +104,7 @@ session's coordination logic.
 
 ### Abstraction
 
-- `Move` hides coordinate-to-array conversion and provides domain notation.
+- `Move` hides coordinate-to-array conversion, promotion notation, and provides domain notation.
 - `Piece` hides piece symbols, color checks, and promotion behavior.
 - `ChessGame` hides the algorithms for path checking, attacks, checks, and legal moves.
 - `ChessClient` hides TCP message handling from the Swing event handlers.
@@ -168,16 +169,17 @@ The package is modular by responsibility:
 
 ```text
 chess/
-  domain       Move, Piece, ChessGame, GameState, MoveValidator, MoveParser,
-               PromotionPolicy, and exceptions
-  server       ChessServer, GameSession, Player, MessageSender
-  client       ChessClient
+  ChessDomain.java       Move, Piece, parsers, promotion policy, and exceptions
+  ChessInterfaces.java   GameState, MoveValidator, MoveParser, PromotionPolicy,
+                         and MessageSender
+  ChessGame.java         Board state and chess rules
+  ChessServer.java       Pairing, sessions, players, and TCP protocol
+  ChessClient.java       Swing presentation and client-side interaction
 ```
 
-The current Java package is intentionally flat for simple execution, but the
-classes already follow these module boundaries. The design supports extracting
-the domain, server, and client into separate packages or modules later without
-changing the protocol contracts.
+The Java package is intentionally flat so the project can be compiled directly
+with one `javac` command. The five source files still separate domain, contracts,
+server, and client responsibilities.
 
 The main design decisions are:
 
@@ -203,15 +205,9 @@ piece subclasses and keeps the model compact.
 The same class model is maintained as PlantUML source and rendered SVG:
 
 - [Chess domain PlantUML source](plantuml/chess-domain.puml)
-- [Chess domain class diagram (SVG)](chess-domain.svg)
 - [Chess network PlantUML source](plantuml/chess-network.puml)
-- [Chess network class diagram (SVG)](chess-network.svg)
 - [Chess runtime object PlantUML source](plantuml/chess-objects.puml)
-- [Chess runtime object diagram (SVG)](chess-objects.svg)
 - [OOP and SOLID design PlantUML source](plantuml/chess-design.puml)
-- [OOP and SOLID design diagram (SVG)](chess-design.svg)
-
-![Chess domain class diagram](chess-domain.svg)
 
 ```mermaid
 classDiagram
@@ -244,6 +240,7 @@ classDiagram
         +int fromCol
         +int toRow
         +int toCol
+        +char promotion
         +parse(String) Move
         +notation() String
     }
@@ -272,12 +269,6 @@ classDiagram
     ChessClient ..> GameSession : TCP protocol
 ```
 
-![Chess network object model](chess-network.svg)
-
-![Chess runtime object diagram](chess-objects.svg)
-
-![OOP and SOLID design](chess-design.svg)
-
 ## 6. Sequence of a valid move
 
 ```mermaid
@@ -289,7 +280,7 @@ sequenceDiagram
     participant Opponent as Other Client
 
     User->>Client: Select source and destination
-    Client->>Session: MOVE|e2e4
+    Client->>Session: MOVE|e2e4 or MOVE|e7e8q
     Session->>Game: move("e2e4")
     Game->>Game: Parse, validate, and apply move
     Game-->>Session: OK|e2e4
@@ -328,4 +319,4 @@ The current responsibilities make future changes localized:
 - Add usernames by extending `Player` without exposing socket details.
 - Add persistence through a `GameRepository` abstraction.
 - Add rooms by introducing a `GameLobby` that creates `GameSession` objects.
-- Add promotion selection by extending the move protocol and `Move`.
+- Add alternate promotion policies through the existing `PromotionPolicy` interface.

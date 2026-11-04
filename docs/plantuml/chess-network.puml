@@ -53,7 +53,7 @@ interface MoveParser {
 }
 
 interface PromotionPolicy {
-  +promote(pawn : Piece, row : int) : Piece
+  +promote(pawn : Piece, row : int, choice : char) : Piece
 }
 
 class ChessException <<exception>>
@@ -63,6 +63,8 @@ class ChessClient {
   -squares : JButton[8][8]
   -socket : Socket
   -out : PrintWriter
+  -white : boolean
+  -whiteToMove : boolean
   --
   +main(args : String[])
   -connect(host : String, port : int)
@@ -87,4 +89,10 @@ GameSession ..> ChessClient : state broadcasts
 
 note "The server is authoritative.\nAll move validation occurs inside ChessGame." as N1
 N1 .. GameSession
+
+note right of ChessClient
+  Displays player colour and
+  current turn. Prompts for
+  q, r, b, or n on promotion.
+end note
 @enduml
