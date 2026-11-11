@@ -1,0 +1,8 @@
+# Java build output
+/out/
+/target/
+
+# IDE metadata
+/.classpath
+/.project
+/.settings/

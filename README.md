@@ -9,8 +9,10 @@ This is a dependency-free, server-authoritative chess game for Java 17:
 The project follows an object-oriented methodology. The domain model, responsibilities,
 relationships, design decisions, use cases, and message sequence are documented in
 [`docs/OBJECT_ORIENTED_METHODOLOGY.md`](docs/OBJECT_ORIENTED_METHODOLOGY.md).
-The two-person work split is documented in
-[`docs/TASK_ASSIGNMENTS.md`](docs/TASK_ASSIGNMENTS.md).
+The implementation also demonstrates classes and objects, attributes, abstraction,
+encapsulation, polymorphism, association, aggregation, composition, SOLID principles,
+exception handling, modularity, dependency injection, and software design in the
+methodology document.
 
 ## Setup guide
 
@@ -88,7 +90,7 @@ when connecting from another computer, and allow the TCP port through the firewa
 3. Connect the second client; it becomes Black.
 4. Click a source square and then a destination square.
 5. The server validates the move and broadcasts the updated board to both clients.
-6. Pawns promote automatically to queens.
+6. When a pawn reaches the last rank, choose whether to promote it to a queen, rook, bishop, or knight.
 
 ### Troubleshooting
 
